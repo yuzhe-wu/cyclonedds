@@ -18,6 +18,7 @@
 #include "dds/ddsrt/ifaddrs.h"
 #include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/string.h"
+#include "dds/ddsrt/log.h"
 
 extern const int *const os_supp_afs;
 
@@ -243,11 +244,12 @@ ddsrt_getifaddrs(
   return err;
 }
 
-#if !(defined __linux || defined __APPLE__)
+#if !(defined __linux || defined __APPLE__ || defined __QNXNTO__)
 
 dds_return_t ddsrt_eth_get_mac_addr (char *interface_name, unsigned char *mac_addr)
 {
   (void) interface_name; (void) mac_addr;
+  DDS_WARNING("ddsrt_eth_get_mac_addr not implemented for this platform");
   return DDS_RETCODE_UNSUPPORTED;
 }
 
@@ -261,6 +263,8 @@ dds_return_t ddsrt_eth_get_mac_addr (char *interface_name, unsigned char *mac_ad
 
 dds_return_t ddsrt_eth_get_mac_addr (char *interface_name, unsigned char *mac_addr)
 {
+    DDS_WARNING("ddsrt_eth_get_mac_addr implementation for LINUX/APPLE/QNXNTO is called");
+
     int ret = DDS_RETCODE_ERROR;
     ddsrt_ifaddrs_t *ifa, *ifa_root = NULL;
 #if defined __linux
@@ -277,8 +281,10 @@ dds_return_t ddsrt_eth_get_mac_addr (char *interface_name, unsigned char *mac_ad
         if (strcmp (ifa->name, interface_name) == 0)
         {
 #if defined __linux
+            DDS_WARNING("ddsrt_eth_get_mac_addr implementation for Linux is called");
             memcpy (mac_addr, ((struct sockaddr_ll *)ifa->addr)->sll_addr, 6);
 #elif defined(__APPLE__) || defined(__QNXNTO__)
+            DDS_WARNING("ddsrt_eth_get_mac_addr implementation for APPLE/QNXNTO is called");
             memcpy (mac_addr, LLADDR((struct sockaddr_dl *)ifa->addr), 6);
 #else
 #error
